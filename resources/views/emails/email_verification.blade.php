@@ -1,0 +1,1 @@
+Please verify your email <a href="{{ route('api.emailVerificationLink', ['encrypted_email_id' => $encryptedEmailId, 'verification_code' => $verificationCode] ) }}"> Verify Email </a>

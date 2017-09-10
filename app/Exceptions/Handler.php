@@ -44,6 +44,28 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        //For API reuqest check 
+        if ( $request->is("api/*") ) {
+            switch (true) {
+                case $this->isHttpException($exception):
+                    switch ( $exception->getStatusCode() ) {
+                        case 404:
+                            $error['error']  = 'Resource not found.';
+                            $error['status_code']  = 404;
+                            return response()->json($error, 404);
+                        case 500:
+                            $error['error']  = 'Internal Servver Error.';
+                            $error['status_code']  = 500;
+                            return response()->json($error, 500);
+
+                    }
+                    break;
+                default:
+                    # code...
+                    break;
+            }
+
+        }        
         return parent::render($request, $exception);
     }
 
