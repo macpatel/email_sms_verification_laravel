@@ -10,9 +10,20 @@ use App\Mail\EmailVerificationLink;
 use Illuminate\Support\Facades\Crypt;
 use Mail;
 use App\Library\T2Factors;
+use App\Repositories\EmailVerificationRepository;
+use App\Repositories\MobileVerificationRepository;
 
 class UserVerificationController extends Controller
 {
+	protected $emailVerificationRepo;
+	protected $mobileVerificationRepo;
+
+	public function __construct(EmailVerificationRepository $emailVerificationRepo,
+								MobileVerificationRepository $mobileVerificationRepo){
+		$this->emailVerificationRepo = $emailVerificationRepo;
+		$this->mobileVerificationRepo = $mobileVerificationRepo;
+	}
+
     public function sendEmailVerification(Request $request){
         $rules = [
             'email_id' => 'required|email',
@@ -25,13 +36,7 @@ class UserVerificationController extends Controller
             return $this->respondeWithError($validator->errors(), 400);
         }
 
-        $confirmation_code = str_random(30);
-
-        $emailVerify = EmailVerification::firstOrNew(["email_id" => $request->input('email_id')]);
-        $emailVerify->email_id = $request->input('email_id');
-        $emailVerify->verification_code = $confirmation_code;
-        $emailVerify->is_verified = false;
-        $emailVerify->save();
+        $emailVerify = $this->emailVerificationRepo->findOrSave($request->all());
 
         Mail::to($emailVerify->email_id)->send(new EmailVerificationLink($emailVerify));
 
@@ -53,16 +58,12 @@ class UserVerificationController extends Controller
             return $this->respondeWithError($validator->errors(), 400);
         }
 
-        try{
-        	$emailVerify = EmailVerification::where('email_id', Crypt::decryptString($request->input('encrypted_email_id')))
-        								->where('verification_code', $request->input('verification_code'))
-        								->firstOrFail();
-        }
-        catch(\Exception $e){
+        $enc_email_id = $request->input('encrypted_email_id');
+        $code = $request->input('verification_code');
+
+        if (!$this->emailVerificationRepo->verifyEmail($enc_email_id, $code)) {
         	return $this->respondeWithError('Email not Verified, Retry.');
         }
-
-        $emailVerify->markVerified();
 
         return $this->respondeWithSuccess('Email Verified.');
     }
@@ -79,13 +80,7 @@ class UserVerificationController extends Controller
             return $this->respondeWithError($validator->errors(), 400);
         }
 
-        $otp = mt_rand(1000,9000);
-
-        $mobileVerify = MobileVerification::firstOrNew(["mobile_no" => $request->input('mobile_no')]);
-        $mobileVerify->mobile_no = $request->input('mobile_no');
-        $mobileVerify->otp = $otp;
-        $mobileVerify->is_verified = false;
-        $mobileVerify->save();
+        $mobileVerify = $this->mobileVerificationRepo->findOrSave($request->all());
 
         $smsApi = new T2Factors();
         $smsResp = $smsApi->sendOTP($mobileVerify->mobile_no, $mobileVerify->otp);
@@ -101,7 +96,7 @@ class UserVerificationController extends Controller
     	$mobileVerify=null;
 		$rules = [
 		            'mobile_no' => 'required|digits:10',
-		            'otp' => 'required',
+		            'OTP' => 'required',
 		        ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -111,17 +106,12 @@ class UserVerificationController extends Controller
             return $this->respondeWithError($validator->errors(), 400);
         }
 
-        try{
-        	$mobileVerify = MobileVerification::where('mobile_no', $request->input('mobile_no'))
-        								->where('otp', $request->input('otp'))
-        								->firstOrFail();
-        }
-        catch(\Exception $e){
+        $mobile_no = $request->input('mobile_no');
+        $otp = $request->input('OTP');
+
+        if (!$this->mobileVerificationRepo->verifyOTP($mobile_no, $otp)) {
         	return $this->respondeWithError('Mobile number not Verified, Retry.');
         }
-
-        $mobileVerify->markVerified();
-
         return $this->respondeWithSuccess('Mobile number Verified.');
 
     }
