@@ -27,7 +27,7 @@ class Controller extends BaseController
      * @return Json
      */
     public function respondeWithError($message='error', $status_code=400){
-    	$response['message'] = $message;
+    	$response['errors'] = $message;
     	return response()->json($response, $status_code);
     }
 
