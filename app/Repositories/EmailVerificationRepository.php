@@ -5,10 +5,17 @@ use Illuminate\Support\Facades\Crypt;
 
 class EmailVerificationRepository extends BaseRepository{
 
+	/**
+	 * @param EmailVerification $emailVerification
+	 */
 	public function __construct(EmailVerification $emailVerification){
 		$this->model = $emailVerification;
 	}
 
+	/**
+	 * @param  Array $params
+	 * @return EmailVerification
+	 */
 	public function findOrSave($params){
 		$emailVerify = $this->findBy('email_id', $params['email_id']);
 		if (empty($emailVerify)) {
@@ -22,6 +29,12 @@ class EmailVerificationRepository extends BaseRepository{
         return $emailVerify;
 	}
 
+	/**
+	 * Verify email against verification code
+	 * @param  String $enc_email_id
+	 * @param  String $code
+	 * @return Boolean
+	 */
 	public function verifyEmail($enc_email_id, $code){
 		try{
 			$emailVerify = $this->model->where('email_id', Crypt::decryptString($enc_email_id))
@@ -36,6 +49,10 @@ class EmailVerificationRepository extends BaseRepository{
 		return true;
 	}
 
+	/**
+	 * Generate confirmation code
+	 * @return String
+	 */
 	public function generateConfirmationCode(){
 		return str_random(30);
 	}

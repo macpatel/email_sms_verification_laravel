@@ -11,11 +11,21 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+    /**
+     * @param  Mixed  $message
+     * @param  integer $status_code
+     * @return Json
+     */
     public function respondeWithSuccess($message='success', $status_code=200){
     	$response['message'] = $message;
     	return response()->json($response, $status_code);
     }
 
+    /**
+     * @param  Mixed  $message
+     * @param  integer $status_code
+     * @return Json
+     */
     public function respondeWithError($message='error', $status_code=400){
     	$response['message'] = $message;
     	return response()->json($response, $status_code);

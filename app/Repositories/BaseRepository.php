@@ -3,10 +3,16 @@ namespace App\Repositories;
 
 class BaseRepository {
 
+    /**
+     * @var Eloquent Model
+     */
 	protected $model;
 
+    /**
+     * @return Collection
+     */
 	public function all(){
-		$this->model->all();
+		return $this->model->all();
 	}
 
     /**

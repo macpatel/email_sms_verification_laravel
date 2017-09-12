@@ -15,15 +15,31 @@ use App\Repositories\MobileVerificationRepository;
 
 class UserVerificationController extends Controller
 {
+	/**
+	 * @var EmailVerificationRepository
+	 */
 	protected $emailVerificationRepo;
+
+	/**
+	 * @var MobileVerificationRepository
+	 */	
 	protected $mobileVerificationRepo;
 
+	/**
+	 * @param EmailVerificationRepository  $emailVerificationRepo
+	 * @param MobileVerificationRepository $mobileVerificationRepo
+	 */
 	public function __construct(EmailVerificationRepository $emailVerificationRepo,
 								MobileVerificationRepository $mobileVerificationRepo){
 		$this->emailVerificationRepo = $emailVerificationRepo;
 		$this->mobileVerificationRepo = $mobileVerificationRepo;
 	}
 
+	/**
+	 * Send Verification Email to email id in request
+	 * @param  Request $request
+	 * @return Json
+	 */
     public function sendEmailVerification(Request $request){
         $rules = [
             'email_id' => 'required|email',
@@ -44,6 +60,11 @@ class UserVerificationController extends Controller
 
     }
 
+	/**
+	 * Verify email in the request
+	 * @param  Request $request
+	 * @return Json
+	 */
     public function verifyEmail(Request $request){
     	$emailVerify=null;
 		$rules = [
@@ -68,6 +89,11 @@ class UserVerificationController extends Controller
         return $this->respondeWithSuccess('Email Verified.');
     }
 
+	/**
+	 * Send OTP to mobile for
+	 * @param  Request $request
+	 * @return Json
+	 */
     public function sendMobileVerification(Request $request){
         $rules = [
             'mobile_no' => 'required|digits:10',
@@ -91,9 +117,13 @@ class UserVerificationController extends Controller
 
     }
 
+	/**
+	 * Verify mobile OTP
+	 * @param  Request $request
+	 * @return Json
+	 */
     public function verifyMobile(Request $request){
 
-    	$mobileVerify=null;
 		$rules = [
 		            'mobile_no' => 'required|digits:10',
 		            'OTP' => 'required',
